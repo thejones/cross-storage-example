@@ -1,0 +1,97 @@
+<!doctype html>
+
+<head>
+  <title>Simple Map</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/3.17/esri/css/esri.css">
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .buttonDiv {
+      position: absolute;
+      top: 30px;
+      left: 100px;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://s3.amazonaws.com/es6-promises/promise-1.0.0.min.js"></script>
+  <script type="text/javascript" src="../lib/client.js"></script>
+  <script src="https://js.arcgis.com/3.17/"></script>
+
+
+</head>
+
+<body>
+
+  <div id="map"></div>
+  <div class="buttonDiv">
+    <button type="button" onclick="window.open('http://localhost:3002/example/tool.html')">Click Me!</button>
+  </div>
+
+
+  <script>
+     map;
+
+      require(["esri/map", "dojo/domReady!"], function(Map) {
+        map = new Map("map", {
+          basemap: "topo",  //For full list of pre-defined basemaps, navigate to http://arcg.is/1JVo6Wd
+          center: [-122.45, 37.75], // longitude, latitude
+          zoom: 13
+        });
+
+      
+      });
+
+
+    function goTo(data){
+      var e = JSON.parse(data);
+      if(e && e.hasOwnProperty('val')){
+
+        var a = [Number(e.val.split(',')[0]), Number(e.val.split(',')[1])]
+        map.centerAndZoom(e.val.split(','), 3);
+      }
+    }
+          
+
+    $(function() {
+      var storage = new CrossStorageClient('http://localhost:3000/example/hub.html');
+
+      var setKeys = function () {
+        return storage.set('key1', 'foo').then(function() {
+          return storage.set('key2', 'bar');
+        });
+      };
+
+    storage.onConnect()
+      .then(setKeys)
+      .then(function() {
+        return storage.get('currentLocation');
+      }).then(function(res) {
+        console.log(res); // 'foo'
+        map.centerAndZoom(res.split(','))
+      })['catch'](function(err) {
+        console.log(err);
+      });
+
+      window.addEventListener('message',function(event) {
+        console.log('message received:  ' + event.data, event);
+        goTo(event.data)
+       
+      },false);
+
+      });
+
+
+    
+    </script>
+
+
+</body>
+
+</html>
